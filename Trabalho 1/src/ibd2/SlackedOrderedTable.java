@@ -20,7 +20,8 @@ public class SlackedOrderedTable extends Table {
     protected Long selectBlock(long primaryKey) throws Exception {
         Block b = getBlockByIndexRecord(primaryKey);
         if (b.isFull()) {
-            List<Record> list = orderedBlock(b); // pega todos os registros do bloco e ordena
+            List<Record> list = null;
+            list = orderedRecords(b, list); // pega todos os registros do bloco e ordena
             b.removeAllRecords(); // remove todos os registros do bloco atual
             for (int i = 0; i < Block.RECORDS_AMOUNT / 2; i++) { // insere metade inferior
                 Record rec = list.get(i);
@@ -38,23 +39,25 @@ public class SlackedOrderedTable extends Table {
     
     private void recursiveSlide (Block b, List<Record> rec) throws Exception {
         Long next = b.block_id + 1;
-        Block b2 = getBlock(next);
+        Block bn = getBlock(next);
 
-        if (b2.isFull()) {
-            List<Record> list = orderedBlock(b2); // pega todos os registros do bloco e ordena
-            b2.removeAllRecords(); // remove todos os registros do bloco atual
+        if (bn.isFull() || rec.size() > bn.freeRecords.size()) { // TODO: MODIFICAR AQUI
+            List<Record> list = orderedRecords(bn, rec); // pega todos os registros do bloco e ordena
+            bn.removeAllRecords(); // remove todos os registros do bloco atual
             for (int i = 0; i < Block.RECORDS_AMOUNT / 2; i++) { // insere metade inferior
                 Record r = list.get(i);
-                addRecord(b2, r); // // insere no bloco os registros RECORDS_AMOUNT / 2;
+                addRecord(bn, r); // // insere no bloco os registros RECORDS_AMOUNT / 2;
+                list.remove(i);
             }
-            recursiveSlide(b2, list);
+            recursiveSlide(bn, list);
         } else {
-            if (rec.size() < b2.freeRecords.size()) {
-                // insiro metade inferior no bloco q tem espaços
-                for (Record r : rec) {
-                    addRecord(b2, r);
+            if (rec.size() <= bn.freeRecords.size()) { // se tem espaço p/ todos os registros no bloco
+                for (Record r : rec) { // insere metade inferior no bloco q tem espaços
+                    addRecord(bn, r);
                     System.out.println("ADD NO BLOCO " + r.getBlockId() + ": " + r.getPrimaryKey());
                 }
+            } else {
+                System.out.println("NÃO TEM ESPAÇO PRA TUDO NO BLOCO!!!!!!!! SOCORRO!!!");
             }
         }
     }
@@ -64,9 +67,11 @@ public class SlackedOrderedTable extends Table {
         return (ir != null) ? getBlock(ir.getBlockId()) : getBlock(0L);
     }
     
-    private List<Record> orderedBlock (Block b) {
+    private List<Record> orderedRecords (Block b, List<Record> list) {
         Iterator<Record> it = b.iterator();
-        List list = new ArrayList();
+        if (list == null) {
+            list = new ArrayList();
+        }
         while (it.hasNext()) { // coloca conteúdo do iterator em uma lista auxiliar
             list.add(it.next());
         }
