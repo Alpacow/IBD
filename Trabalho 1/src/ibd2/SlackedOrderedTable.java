@@ -25,7 +25,7 @@ public class SlackedOrderedTable extends Table {
             b.removeAllRecords(); // remove todos os registros do bloco atual
             for (int i = 0; i < Block.RECORDS_AMOUNT / 2; i++) { // insere metade inferior
                 Record rec = list.get(i);
-                System.out.println("ADD NO BLOCO " + rec.getBlockId() + ": " + rec.getPrimaryKey());
+                //System.out.println("ADD NO BLOCO " + rec.getBlockId() + ": " + rec.getPrimaryKey());
                 addRecord(b, rec); // // insere no bloco os registros RECORDS_AMOUNT / 2;
                 list.remove(i); // remove o elemento inserido no bloco da lista
             }
@@ -54,7 +54,7 @@ public class SlackedOrderedTable extends Table {
             if (rec.size() < bn.freeRecords.size()) { // se tem espaço p/ todos os registros no bloco
                 for (Record r : rec) { // insere metade inferior no bloco q tem espaços
                     addRecord(bn, r);
-                    System.out.println("ADD NO BLOCO " + r.getBlockId() + ": " + r.getPrimaryKey());
+                    //System.out.println("ADD NO BLOCO " + r.getBlockId() + ": " + r.getPrimaryKey());
                 }
             }
         }
