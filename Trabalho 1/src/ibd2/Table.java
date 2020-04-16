@@ -93,7 +93,7 @@ public abstract class Table {
 
         
         Long free_block_id = selectBlock(primaryKey);
-        
+        System.out.println("ID BLOCO RETORNADO " + free_block_id);
         
         Block block = bufferManager.getBlock(free_block_id, tableIO);
 

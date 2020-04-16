@@ -18,63 +18,65 @@ public class SlackedOrderedTable extends Table {
 
     @Override
     protected Long selectBlock(long primaryKey) throws Exception {
-        IndexRecord ir = getLargestSmallerKey(primaryKey);
-        Block b = null;
-        if (ir != null) {
-            b = getBlock(ir.getBlockId());
-        } else {
-            b = getBlock(0L);
-        }
-
+        Block b = getBlockByIndexRecord(primaryKey);
         if (b.isFull()) {
-            Iterator<Record> ordered = orderedBlock(b); // pega todos os registros do bloco e ordena
+            List<Record> list = orderedBlock(b); // pega todos os registros do bloco e ordena
             b.removeAllRecords(); // remove todos os registros do bloco atual
-            for (long i = 0; i < b.RECORDS_AMOUNT / 2; i++) { // insere metade inferior
-                Record rec = ordered.next();
+            for (int i = 0; i < Block.RECORDS_AMOUNT / 2; i++) { // insere metade inferior
+                Record rec = list.get(i);
                 System.out.println("ADD NO BLOCO " + rec.getBlockId() + ": " + rec.getPrimaryKey());
                 addRecord(b, rec); // // insere no bloco os registros RECORDS_AMOUNT / 2;
+                list.remove(i); // remove o elemento inserido no bloco da lista
             }
-            
-            // novo registro sera inserido no bloco atual (pois há espaços agora)
-            // demais registros vao no bloco seguinte
-            recursiveSlide(b, ordered);
+            // metade inferior é inserida no bloco seguinte
+            recursiveSlide(b, list);
+            b = getBlockByIndexRecord(primaryKey);
             return b.block_id;
         }
         return b.block_id;
     }
     
-    private void recursiveSlide (Block b, Iterator<Record> rec) throws Exception {
+    private void recursiveSlide (Block b, List<Record> rec) throws Exception {
         Long next = b.block_id + 1;
         Block b2 = getBlock(next);
 
-        if (b2.isFull()) { // MODIFICAR AQUI TBM
-            Iterator<Record> ordered = orderedBlock(b2); // pega todos os registros do bloco e ordena
+        if (b2.isFull()) {
+            List<Record> list = orderedBlock(b2); // pega todos os registros do bloco e ordena
             b2.removeAllRecords(); // remove todos os registros do bloco atual
-            for (long i = 0; i < b.RECORDS_AMOUNT / 2; i++) { // insere metade inferior
-                Record r = ordered.next();
+            for (int i = 0; i < Block.RECORDS_AMOUNT / 2; i++) { // insere metade inferior
+                Record r = list.get(i);
                 addRecord(b2, r); // // insere no bloco os registros RECORDS_AMOUNT / 2;
             }
-            recursiveSlide(b2, ordered);
+            recursiveSlide(b2, list);
         } else {
-            // insiro metade inferior no bloco q tem espaços
-            for (long i = b.RECORDS_AMOUNT / 2; i < b.RECORDS_AMOUNT; i++) {
-                Record r = rec.next();
-                addRecord(b2, r);
+            if (rec.size() < b2.freeRecords.size()) {
+                // insiro metade inferior no bloco q tem espaços
+                for (Record r : rec) {
+                    addRecord(b2, r);
+                    System.out.println("ADD NO BLOCO " + r.getBlockId() + ": " + r.getPrimaryKey());
+                }
             }
         }
     }
     
-    private Iterator<Record> orderedBlock (Block b) {
+    private Block getBlockByIndexRecord (long pk) throws Exception {
+        IndexRecord ir = getLargestSmallerKey(pk);
+        return (ir != null) ? getBlock(ir.getBlockId()) : getBlock(0L);
+    }
+    
+    private List<Record> orderedBlock (Block b) {
         Iterator<Record> it = b.iterator();
         List list = new ArrayList();
         while (it.hasNext()) { // coloca conteúdo do iterator em uma lista auxiliar
             list.add(it.next());
         }
         Collections.sort(list, Comparator.comparing(Record::getPrimaryKey)); // ordena a lista
-        return list.iterator(); // converte a lista em um iterator
+        return list; // converte a lista em um iterator
     }
     
-
+    /*
+        Retorna a maior chave primária que seja menor do que a chave que se quer inserir
+    */
     private IndexRecord getLargestSmallerKey(long primaryKey) {
         IndexRecord ir = null;
         for (long i = primaryKey; i >= 0; i--) {
@@ -86,6 +88,7 @@ public class SlackedOrderedTable extends Table {
         return ir;
     }
 
+    /*
     private Record findLargest(Block b) throws Exception {
         Long max = -1L;
         Record maxR = null;
@@ -100,5 +103,6 @@ public class SlackedOrderedTable extends Table {
             }
         }
         return maxR;
-    } 
+    }
+    */
 }
