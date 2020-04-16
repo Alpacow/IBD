@@ -41,7 +41,7 @@ public class SlackedOrderedTable extends Table {
         Long next = b.block_id + 1;
         Block bn = getBlock(next);
 
-        if (bn.isFull() || rec.size() > bn.freeRecords.size()) { // TODO: MODIFICAR AQUI
+        if (bn.isFull() || rec.size() >= bn.freeRecords.size()) { // TODO: MODIFICAR AQUI
             List<Record> list = orderedRecords(bn, rec); // pega todos os registros do bloco e ordena
             bn.removeAllRecords(); // remove todos os registros do bloco atual
             for (int i = 0; i < Block.RECORDS_AMOUNT / 2; i++) { // insere metade inferior
@@ -51,13 +51,11 @@ public class SlackedOrderedTable extends Table {
             }
             recursiveSlide(bn, list);
         } else {
-            if (rec.size() <= bn.freeRecords.size()) { // se tem espaço p/ todos os registros no bloco
+            if (rec.size() < bn.freeRecords.size()) { // se tem espaço p/ todos os registros no bloco
                 for (Record r : rec) { // insere metade inferior no bloco q tem espaços
                     addRecord(bn, r);
                     System.out.println("ADD NO BLOCO " + r.getBlockId() + ": " + r.getPrimaryKey());
                 }
-            } else {
-                System.out.println("NÃO TEM ESPAÇO PRA TUDO NO BLOCO!!!!!!!! SOCORRO!!!");
             }
         }
     }
