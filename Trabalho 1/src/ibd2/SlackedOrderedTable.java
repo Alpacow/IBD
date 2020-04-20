@@ -1,6 +1,7 @@
 package ibd2;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -23,39 +24,62 @@ public class SlackedOrderedTable extends Table {
             List<Record> list = null;
             list = orderedRecords(b, list); // pega todos os registros do bloco e ordena
             b.removeAllRecords(); // remove todos os registros do bloco atual
-            for (int i = 0; i < Block.RECORDS_AMOUNT / 2; i++) { // insere metade inferior
+            showList(list);
+            for (int i = 0; i < Block.RECORDS_AMOUNT / 2; i++) { // percorre metade superior
                 Record rec = list.get(i);
-                //System.out.println("ADD NO BLOCO " + rec.getBlockId() + ": " + rec.getPrimaryKey());
+                System.out.println("ADD NO BLOCO " + rec.getBlockId() + ": " + rec.getPrimaryKey());
                 addRecord(b, rec); // // insere no bloco os registros RECORDS_AMOUNT / 2;
-                list.remove(i); // remove o elemento inserido no bloco da lista
             }
-            // metade inferior é inserida no bloco seguinte
+            clearUpper(list);
+            // metade inferior (resto da lista) é inserida no bloco seguinte
             recursiveSlide(b, list);
+            showList(list);
             b = getBlockByIndexRecord(primaryKey);
             return b.block_id;
         }
+        System.out.println("Insere " + primaryKey + " no bloco: " + b.block_id);
         return b.block_id;
+    }
+    
+    private void showList (List<Record> list) {
+        list.stream().forEach((rec) -> {
+            System.out.println(rec.getPrimaryKey());
+        });
+    }
+    
+    /*
+        Remove os elementos da metade superior da lista
+    */
+    private void clearUpper(List<Record> list) {
+        for (int i = 0; i < Block.RECORDS_AMOUNT / 2; i++) {
+            list.remove(0);
+        }
     }
     
     private void recursiveSlide (Block b, List<Record> rec) throws Exception {
         Long next = b.block_id + 1;
         Block bn = getBlock(next);
 
-        if (bn.isFull() || rec.size() >= bn.freeRecords.size()) { // TODO: MODIFICAR AQUI
+        if (bn.isFull() || bn.freeRecords.size() < rec.size()) {
             List<Record> list = orderedRecords(bn, rec); // pega todos os registros do bloco e ordena
             bn.removeAllRecords(); // remove todos os registros do bloco atual
-            for (int i = 0; i < Block.RECORDS_AMOUNT / 2; i++) { // insere metade inferior
+            showList(list);
+            for (int i = 0; i < Block.RECORDS_AMOUNT / 2; i++) { // percorre metade superior
                 Record r = list.get(i);
-                addRecord(bn, r); // // insere no bloco os registros RECORDS_AMOUNT / 2;
-                list.remove(i);
+                addRecord(bn, r);
             }
+            clearUpper(list);
+            showList(list);
             recursiveSlide(bn, list);
         } else {
             if (rec.size() < bn.freeRecords.size()) { // se tem espaço p/ todos os registros no bloco
+                System.out.println("RECURSIVE");
+                showList(rec);
                 for (Record r : rec) { // insere metade inferior no bloco q tem espaços
                     addRecord(bn, r);
-                    //System.out.println("ADD NO BLOCO " + r.getBlockId() + ": " + r.getPrimaryKey());
+                    System.out.println("ADD NO BLOCO " + r.getBlockId() + ": " + r.getPrimaryKey());
                 }
+                rec.clear(); // limpa a lista, todos os elementos pendentes foram inseridos
             }
         }
     }
@@ -90,22 +114,4 @@ public class SlackedOrderedTable extends Table {
         }
         return ir;
     }
-
-    /*
-    private Record findLargest(Block b) throws Exception {
-        Long max = -1L;
-        Record maxR = null;
-        Iterator<Record> it = b.iterator();
-        //for (int x = 0; x < b.getRecordsCount(); x++) {
-        while (it.hasNext()){
-            //Record rec = b.getRecord(x);
-            Record rec = it.next();
-            if (rec.getPrimaryKey() > max) {
-                max = rec.getPrimaryKey();
-                maxR = rec;
-            }
-        }
-        return maxR;
-    }
-    */
 }

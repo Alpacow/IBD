@@ -1,11 +1,12 @@
 package ibd2;
 
+import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
  *
- * @author flan
+ * @author Sergio
  */
 public class Main {
 
@@ -102,6 +103,18 @@ public class Main {
         long end = System.currentTimeMillis();
         return (end-start);
     }
+    
+    public static void showByBlock (Table t) throws Exception {
+        for (long i = 0; i < 100; i++) {
+            Block b = t.getBlock(i);
+            Iterator<Record> it = b.iterator();
+            while (it.hasNext()) { // coloca conteúdo do iterator em uma lista auxiliar
+                Record rec = it.next();
+                System.out.println(rec.getContent() + " in block " + rec.getBlockId());
+            }
+            System.out.println();
+        }
+    }
 
     public static void main(String[] args) {
         try {
@@ -112,9 +125,9 @@ public class Main {
             Params.RECORDS_REMOVED = 0;
             Params.BLOCKS_LOADED = 0;
             Params.BLOCKS_SAVED = 0;
-            long timeInsert = m.testMultipleInsertions(table, 1000, false, true);
+            long timeInsert = m.testMultipleInsertions(table, 100, false, false);
             
-            long timeQuery = m.testMultipleSearches(table, 1000, true, true);
+            long timeQuery = m.testMultipleSearches(table, 100, true, true);
             
             System.out.println("records added during reorganization " + Params.RECORDS_ADDED);
             System.out.println("records removed during reorganization " + Params.RECORDS_REMOVED);
