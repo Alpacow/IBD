@@ -78,7 +78,7 @@ public class SlackedOrderedTable extends Table{
 
 
 
-        private IndexRecord getLargestSmallerKey(long primaryKey) {
+    private IndexRecord getLargestSmallerKey(long primaryKey) {
         IndexRecord ir = null;
         for (long i = primaryKey; i >= 0; i--) {
             ir = index.getEntry(i);

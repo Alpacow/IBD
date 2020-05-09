@@ -1,12 +1,8 @@
 package ibd2.query;
 
-import ibd2.Directory;
 import ibd2.Params;
-import ibd2.Record;
 import ibd2.Table;
-import ibd2.Utils;
 import static ibd2.Utils.createTable;
-import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -151,27 +147,29 @@ public class Main {
 
     }
 
+    /* 
+
+    */
     public void testNestedLoopJoin() throws Exception {
-
-        Table table1 = createTable("","t1.ibd",50, false, 1);
-        Table table2 = createTable("","t2.ibd",50, false, 1);
-        Table table3 = createTable("","t3.ibd",50, false, 1);
-        Table table4 = createTable("","t4.ibd",50, false, 1);
-
+        Table table1 = createTable("","t1.ibd",150, false, 1);
+        Table table2 = createTable("","t2.ibd",260, false, 1);
+        Table table3 = createTable("","t3.ibd",300, false, 1);
+        Table table4 = createTable("","t4.ibd",150, false, 1);
+        
         Operation scan1 = new TableScan(table1);
         Operation scan2 = new TableScan(table2);
         Operation scan3 = new TableScan(table3);
         Operation scan4 = new TableScan(table4);
-
-        NestedLoopJoin join1 = new NestedLoopJoin(scan1, scan2);
-        NestedLoopJoin join2 = new NestedLoopJoin(join1, scan3);
-        NestedLoopJoin join3 = new NestedLoopJoin(join2, scan4);
+        
+        Operation join1 = new NestedLoopJoin(scan1, scan2);
+        Operation join2 = new NestedLoopJoin(join1, scan3);
+        Operation join = new NestedLoopJoin(join2, scan4);
 
         Params.BLOCKS_LOADED = 0;
         Params.BLOCKS_SAVED = 0;
-        join3.open();
-        while (join3.hasNext()){
-            Tuple r = join3.next();
+        join.open();
+        while (join.hasNext()){
+            Tuple r = join.next();
             System.out.println(r.primaryKey + " - " + r.content);
         }
         System.out.println("blocks loaded during reorganization " + Params.BLOCKS_LOADED);
@@ -180,28 +178,46 @@ public class Main {
     }
 
     public void testOptmizer () throws Exception {
-        Table table1 = createTable("","t1.ibd",100, false, 1);
-        Table table2 = createTable("","t2.ibd",200, false, 1);
-        Table table3 = createTable("","t3.ibd",150, false, 1);
+        Table table1 = createTable("","t1.ibd",150, false, 1);
+        Table table2 = createTable("","t2.ibd",260, false, 1);
+        Table table3 = createTable("","t3.ibd",300, false, 1);
+        Table table4 = createTable("","t4.ibd",150, false, 1);
         
         Operation scan1 = new TableScan(table1);
         Operation scan2 = new TableScan(table2);
         Operation scan3 = new TableScan(table3);
-        Operation join1 = new MergeJoin(scan1, scan2);
-        Operation join2 = new MergeJoin(scan3, join1);
+        Operation scan4 = new TableScan(table4);
+        
+        Operation join1 = new NestedLoopJoin(scan1, scan2);
+        Operation join2 = new NestedLoopJoin(join1, scan3);
+        Operation join = new NestedLoopJoin(scan4, join2);
         
         FrancielleQueryOptimizer opt = new FrancielleQueryOptimizer();
-        Operation query = opt.optimizeQuery(join2); 
-        /*query.open();
+        Operation query = opt.optimizeQuery(join);
+        
+        Params.BLOCKS_LOADED = 0;
+        Params.BLOCKS_SAVED = 0; 
+        query.open();
         while (query.hasNext()){
             Tuple r = query.next();
             System.out.println(r.primaryKey + " - " + r.content);
-        }*/
+        }
+        System.out.println("blocks loaded during reorganization " + Params.BLOCKS_LOADED);
+        System.out.println("blocks saved during reorganization " + Params.BLOCKS_SAVED);
     }
 
     public static void main(String[] args) {
         try {
             Main m = new Main();
+            /*
+                blocks loaded during reorganization 72
+                blocks saved during reorganization 13
+            */
+            //m.testNestedLoopJoin();
+            /*
+                blocks loaded during reorganization 12861
+                blocks saved during reorganization 1204
+            */
             m.testOptmizer();
 
         } catch (Exception ex) {
