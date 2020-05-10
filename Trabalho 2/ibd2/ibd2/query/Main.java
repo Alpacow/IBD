@@ -178,10 +178,10 @@ public class Main {
     }
 
     public void testOptmizer () throws Exception {
-        Table table1 = createTable("","t1.ibd",150, false, 1);
-        Table table2 = createTable("","t2.ibd",260, false, 1);
-        Table table3 = createTable("","t3.ibd",300, false, 1);
-        Table table4 = createTable("","t4.ibd",150, false, 1);
+        Table table1 = createTable("","t1.ibd",10, false, 1);
+        Table table2 = createTable("","t2.ibd",20, false, 1);
+        Table table3 = createTable("","t3.ibd",30, false, 1);
+        Table table4 = createTable("","t4.ibd",2, false, 1);
         
         Operation scan1 = new TableScan(table1);
         Operation scan2 = new TableScan(table2);
@@ -189,8 +189,8 @@ public class Main {
         Operation scan4 = new TableScan(table4);
         
         Operation join1 = new NestedLoopJoin(scan1, scan2);
-        Operation join2 = new NestedLoopJoin(join1, scan3);
-        Operation join = new NestedLoopJoin(scan4, join2);
+        Operation join2 = new NestedLoopJoin(scan3, scan4);
+        Operation join = new NestedLoopJoin(join1, join2);
         
         FrancielleQueryOptimizer opt = new FrancielleQueryOptimizer();
         Operation query = opt.optimizeQuery(join);
