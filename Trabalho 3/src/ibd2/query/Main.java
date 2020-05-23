@@ -146,82 +146,57 @@ public class Main {
 
 
     }
-
-    /* 
-
+    
+    /*
+    VERIFICAÇÃO: NESTED LOOP JOIN -> RECORDS_AMOUNT = 8
+    Operation join = new NestedLoopJoin(scan1, scan2);
+        blocks loaded 704
+        blocks saved  34
+    
+    Operation join4 = new NestedLoopJoin(join3, scan1);
+        blocks loaded 2624
+        blocks saved  197
     */
     public void testNestedLoopJoin() throws Exception {
-        Table table1 = createTable("","t1.ibd",150, false, 1);
-        Table table2 = createTable("","t2.ibd",260, false, 1);
-        Table table3 = createTable("","t3.ibd",300, false, 1);
-        Table table4 = createTable("","t4.ibd",150, false, 1);
-        
-        Operation scan1 = new TableScan(table1);
-        Operation scan2 = new TableScan(table2);
-        Operation scan3 = new TableScan(table3);
-        Operation scan4 = new TableScan(table4);
-        
-        Operation join1 = new NestedLoopJoin(scan1, scan2);
-        Operation join2 = new NestedLoopJoin(join1, scan3);
-        Operation join = new NestedLoopJoin(join2, scan4);
 
-        Params.BLOCKS_LOADED = 0;
-        Params.BLOCKS_SAVED = 0;
-        join.open();
-        while (join.hasNext()){
-            Tuple r = join.next();
-            System.out.println(r.primaryKey + " - " + r.content);
-        }
-        System.out.println("blocks loaded during reorganization " + Params.BLOCKS_LOADED);
-        System.out.println("blocks saved during reorganization " + Params.BLOCKS_SAVED);
+        Table table1 = createTable("c:\\teste\\ibd","t1.ibd",10, true, 1);
+        Table table2 = createTable("c:\\teste\\ibd","t2.ibd",20, true, 1);
+        Table table3 = createTable("c:\\teste\\ibd","t3.ibd",30, false, 1);
+        Table table4 = createTable("c:\\teste\\ibd","t4.ibd",40, false, 1);
+        Table table5 = createTable("c:\\teste\\ibd","t5.ibd",50, false, 1);
 
-    }
-
-    public void testOptmizer () throws Exception {
-        Table table1 = createTable("","t1.ibd",10, false, 1);
-        Table table2 = createTable("","t2.ibd",20, false, 1);
-        Table table3 = createTable("","t3.ibd",30, false, 1);
-        Table table4 = createTable("","t4.ibd",40, false, 1);
-        Table table5 = createTable("","t5.ibd",50, false, 1);
-        
         Operation scan1 = new TableScan(table1);
         Operation scan2 = new TableScan(table2);
         Operation scan3 = new TableScan(table3);
         Operation scan4 = new TableScan(table4);
         Operation scan5 = new TableScan(table5);
         
-        Operation join1 = new NestedLoopJoin(scan1, scan2);
-        Operation join2 = new NestedLoopJoin(join1, scan3);
-        Operation join3 = new NestedLoopJoin(join2, scan4);
-        Operation join = new NestedLoopJoin(join3, scan5);
+        Operation join1 = new NestedLoopJoin(scan3, scan5);
+        Operation join2 = new NestedLoopJoin(scan2, scan4);
+        Operation join3 = new NestedLoopJoin(join1, join2);
+        Operation join4 = new NestedLoopJoin(join3, scan1);
         
-        FrancielleQueryOptimizer opt = new FrancielleQueryOptimizer();
+        Operation join = new NestedLoopJoin(scan1, scan2);
+        
+        QueryOptimizer opt = new QueryOptimizer();
         Operation query = opt.optimizeQuery(join);
-        
+         
         Params.BLOCKS_LOADED = 0;
-        Params.BLOCKS_SAVED = 0; 
+        Params.BLOCKS_SAVED = 0;
         query.open();
         while (query.hasNext()){
             Tuple r = query.next();
-            System.out.println(r.primaryKey + " - " + r.content);
+            System.out.println(r.primaryKey + " - "+r.content);
         }
-        System.out.println("blocks loaded during reorganization " + Params.BLOCKS_LOADED);
-        System.out.println("blocks saved during reorganization " + Params.BLOCKS_SAVED);
+        System.out.println("blocks loaded " + Params.BLOCKS_LOADED);
+        System.out.println("blocks saved  " + Params.BLOCKS_SAVED);
+
     }
 
     public static void main(String[] args) {
         try {
             Main m = new Main();
-            /*
-                blocks loaded during reorganization 72
-                blocks saved during reorganization 13
-            */
-            //m.testNestedLoopJoin();
-            /*
-                blocks loaded during reorganization 12861
-                blocks saved during reorganization 1204
-            */
-            m.testOptmizer();
+            m.testNestedLoopJoin();
 
         } catch (Exception ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
