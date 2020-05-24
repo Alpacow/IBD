@@ -15,7 +15,7 @@ import java.util.TreeSet;
  */
 public class Block implements Iterable{
 
-    public final static Long RECORDS_AMOUNT = 8L; // 31
+    public final static Long RECORDS_AMOUNT = 31L;
 
     public final static Long HEADER_LEN = Long.BYTES + RECORDS_AMOUNT * Long.BYTES;
 

@@ -171,12 +171,10 @@ public class Main {
         Operation scan4 = new TableScan(table4);
         Operation scan5 = new TableScan(table5);
         
-        Operation join1 = new NestedLoopJoin(scan3, scan5);
-        Operation join2 = new NestedLoopJoin(scan2, scan4);
-        Operation join3 = new NestedLoopJoin(join1, join2);
-        Operation join4 = new NestedLoopJoin(join3, scan1);
-        
-        Operation join = new NestedLoopJoin(scan1, scan2);
+        Operation join1 = new NestedLoopJoin(scan5, scan4);
+        Operation join2 = new NestedLoopJoin(join1, scan3);
+        Operation join3 = new NestedLoopJoin(join2, scan2);
+        Operation join = new NestedLoopJoin(join3, scan1);
         
         QueryOptimizer opt = new QueryOptimizer();
         Operation query = opt.optimizeQuery(join);

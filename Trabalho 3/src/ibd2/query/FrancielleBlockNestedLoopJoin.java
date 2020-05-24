@@ -9,16 +9,6 @@ import java.util.List;
  * @author flan
  */
 
- /*
-    VERIFICAÇÃO: BLOCK NESTED LOOP JOIN -> RECORDS_AMOUNT = 8
-    Operation join = new NestedLoopJoin(scan1, scan2);
-        blocks loaded 192
-        blocks saved  10
-    
-    Operation join4 = new NestedLoopJoin(join3, scan1);
-        blocks loaded 576
-        blocks saved  45
-    */
 public class FrancielleBlockNestedLoopJoin implements BinaryOperation {
     Operation op1;
     Operation op2;
@@ -49,22 +39,22 @@ public class FrancielleBlockNestedLoopJoin implements BinaryOperation {
     */
     @Override
     public Tuple next() throws Exception {
-        if (nextTuple != null) {
+        if (nextTuple != null) { // se a nextTuple já foi setada, retorna ela
             Tuple next_ = nextTuple;
             nextTuple = null;
             return next_;
         }
 
-        if (joinBuffer.size() <= 0) {
-            fillBuffer();
+        if (joinBuffer.size() <= 0) { // se o buffer está vazio
+            fillBuffer(); // enche o buffer
         }
-        while (op1.hasNext()  || joinBuffer.size() > 0) {
+        while (op1.hasNext() || joinBuffer.size() > 0) {
             if (joinBuffer.size() > 0) { // se tem algum registro da 1ª operação
                 // verificar todos registros da op2 e comparar com op1
-                while (op2.hasNext()) {
-                    curTuple = op2.next();
+                while (op2.hasNext()) { // percorre a tabela 2
+                    curTuple = op2.next(); // atualiza a tupla atual a ser comparada
                     for (Tuple t : joinBuffer) { // para cada elemento de op2, percorre o buffer
-                        if (curTuple.primaryKey == t.primaryKey) {
+                        if (curTuple.primaryKey == t.primaryKey) { // se as PK forem iguais, elemento encontrado
                             Tuple rec = new Tuple();
                             rec.primaryKey = t.primaryKey;
                             rec.content = t.content + " " + curTuple.content;
@@ -74,9 +64,9 @@ public class FrancielleBlockNestedLoopJoin implements BinaryOperation {
                 }
             }
             /* op2 foi totalmente scaneada */
-            if (!op2.hasNext()) {
-                joinBuffer.clear();
-                fillBuffer();
+            if (!op2.hasNext()) { // por garantia testa se op2 ñ possui mais registros
+                joinBuffer.clear(); // reseta o buffer
+                fillBuffer(); // preenche o buffer com os demais dados
             }
         }
 
@@ -88,12 +78,12 @@ public class FrancielleBlockNestedLoopJoin implements BinaryOperation {
     */
     @Override
     public boolean hasNext() throws Exception {
-        if (nextTuple != null) {
+        if (nextTuple != null) { // se ja tem o proximo registro setado ainda há registros na tabela
             return true;
         }
         
-        if (joinBuffer.size() <= 0) {
-            fillBuffer();
+        if (joinBuffer.size() <= 0) { // se o buffer tá vazio
+            fillBuffer(); // enche o buffer
         }
         while (op1.hasNext() || joinBuffer.size() > 0) {
             if (joinBuffer.size() > 0) { // se tem algum registro da 1ª operação
@@ -117,7 +107,7 @@ public class FrancielleBlockNestedLoopJoin implements BinaryOperation {
                 op2.open();
             }
         }
-        return false;
+        return false; // todos os loops foram concluídos, logo n há mais registros
     }
     
     /* Preenche o buffer com tuplas da operação 1, com tamanho equivalente a Block.RECORDS_AMOUNT*/
