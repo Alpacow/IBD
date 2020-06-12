@@ -87,7 +87,7 @@ public class SimulatedIterations {
     
     public void run(int error) throws Exception {
 
-        FrancielleConcurrencyManager manager = new FrancielleConcurrencyManager(true);
+        FrancielleConcurrencyManager manager = new FrancielleConcurrencyManager(false);
         int commited = 0;
 
         int step = 0;

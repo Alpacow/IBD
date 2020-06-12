@@ -3,6 +3,8 @@
  */
 package ibd2.transaction;
 
+import java.util.ArrayList;
+
 /**
  *
  * @author flan
@@ -28,10 +30,14 @@ public class FrancielleConcurrencyManager extends ConcurrencyManager {
     }
     
     private Transaction woundWaitEstrategy (Item item, Instruction instruction) {
-        addToLockQueue(item, instruction);
+        Lock l = addToLockQueue(item, instruction);
         for (Lock lock : item.locks) {
             if (instruction.getTransaction().getId() < lock.transaction.getId()) {
-                return lock.transaction;
+                if (instruction.getMode() == Instruction.READ && lock.mode == Instruction.READ) {}
+                else {
+                    changePositions(l, lock, item.locks);
+                    return lock.transaction;
+                }
             }
         }
         return null;
@@ -41,15 +47,26 @@ public class FrancielleConcurrencyManager extends ConcurrencyManager {
         addToLockQueue(item, instruction);
         for (Lock lock : item.locks) {
             if (instruction.getTransaction().getId() > lock.transaction.getId()) {
-                return lock.transaction;
+                if (instruction.getMode() == Instruction.READ && lock.mode == Instruction.READ) {}
+                else
+                    return instruction.getTransaction();
             }
         }
         return null;
     }
     
-    private void addToLockQueue (Item item, Instruction instruction) {
+    private Lock addToLockQueue (Item item, Instruction instruction) {
         Lock l = new Lock(instruction.getTransaction(), instruction.getMode());
         item.locks.add(l);
         instruction.setItem(item);
+        return l;
+    }
+    
+    /* musa os locks l1 e l2 de lugar
+    private void changePositions (Lock l1, Lock l2, ArrayList<Lock> list) {
+        int idx1 = list.indexOf(l1);
+        int idx2 = list.indexOf(l2);
+        list.set(idx1, l2);
+        list.set(idx2, l1);
     }
 }
