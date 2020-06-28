@@ -89,7 +89,7 @@ public class Main {
 
         //tabelas criadas com 1000 registros ordenados
         Table table1 = createTable("c:\\teste\\ibd","t1.ibd",1000, false, 1);
-        Table table2 = createTable("c:\\teste\\ibd","t2.ibd",1000, false, 50);
+        Table table2 = createTable("c:\\teste\\ibd","t2.ibd",1000, false, 1);
 
         //não é necessário ordenar as tabelas, pois os registros já foram inseridos em ordem
         Operation scan1 = new TableScan(table1);
@@ -149,20 +149,19 @@ public class Main {
             Tuple r = join2.next();
             System.out.println(r.primaryKey + " - "+r.content);
         }
-
-
     }
-
-
 
     public void testNestedLoopJoin() throws Exception {
         Table table1 = createTable("c:\\teste\\ibd","t1.ibd",10, false, 1);
         Table table2 = createTable("c:\\teste\\ibd","t2.ibd",5, false, 1);
+        Table table3 = createTable("c:\\teste\\ibd","t3.ibd",20, false, 5);
         
         Operation scan1 = new TableScan(table1);
         Operation scan2 = new TableScan(table2);
+        Operation scan3 = new TableScan(table3);
             
-        Operation union = new FrancielleUnion(scan1, scan2);    
+        Operation a = new FrancielleUnion(scan1, scan2);    
+        Operation union = new FrancielleUnion(scan3, a);    
         
         Params.BLOCKS_LOADED = 0;
         Params.BLOCKS_SAVED = 0;
@@ -176,7 +175,23 @@ public class Main {
 
     }
 
+    /*
+    0 - t3.ibd(0)
+    5 - t3.ibd(5)
+    10 - t3.ibd(10)
+    15 - t3.ibd(15)
     
+    0 - t1.ibd(0) t2.ibd(0)
+    1 - t1.ibd(1) t2.ibd(1)
+    2 - t1.ibd(2) t2.ibd(2)
+    3 - t1.ibd(3) t2.ibd(3)
+    4 - t1.ibd(4) t2.ibd(4)
+    5 - t1.ibd(5)
+    6 - t1.ibd(6)
+    7 - t1.ibd(7)
+    8 - t1.ibd(8)
+    9 - t1.ibd(9)
+    */
   //  blocks loaded during reorganization 2621
 //blocks saved during reorganization 63
 
